@@ -1,0 +1,88 @@
+Блок 2. Работа с HDFS
+
+См. флаги “-mkdir” и “-touchz“
+1. hdfs dfs -mkdir /folder
+2. hdfs dfs -mkdir /folder/subfolder
+3. при rm файлы не удаляются, а (если в конфигурации включен Trash) перемещаются в /user/<username>/.Trash/ и могут быть восстановлены перемещением из этой папки. Параметр -skipTrash служит для того, чтобы удалить сразу, минуя Trash (ну или можно выключить Trash в конфигурации)
+4. hdfs dfs -touchz /folder/subfolder/file.txt
+5. hdfs dfs -rm /folder/subfolder/file.txt
+6. hdfs dfs -rm -r -f /folder/
+
+См. флаги “-put”, “-cat”, “-tail”, “-cp”
+1. sudo docker cp mein_herz_brennt.txt namenode:/
+   sudo docker exec -it namenode /bin/bash
+
+   hdfs dfs -mkdir /newfolder 
+   hdfs dfs -put mein_herz_brennt.txt /newfolder/
+2. hdfs dfs -cat /newfolder/mein_herz_brennt.txt
+3. hdfs dfs -cat /newfolder/mein_herz_brennt.txt | tail
+4. hdfs dfs -cat /newfolder/mein_herz_brennt.txt | head
+5. hdfs dfs -mkdir /newlocation
+   hdfs dfs -mv /newfolder/mein_herz_brennt.txt /newlocation/
+
+2. hdfs dfs -setrep -w 2 /newlocation/mein_herz_brennt.txt - уменьшение ~10 сек
+   hdfs dfs -setrep -w 3 /newlocation/mein_herz_brennt.txt - увеличение ~8 сек
+   
+3. hdfs fsck /newlocation/mein_herz_brennt.txt -files -blocks -locations
+Connecting to namenode via http://namenode:9870/fsck?ugi=root&files=1&blocks=1&locations=1&path=%2Fnewlocation%2Fmein_herz_brennt.txt
+FSCK started by root (auth:SIMPLE) from /172.18.0.5 for path /newlocation/mein_herz_brennt.txt at Sun Oct 03 09:46:38 UTC 2021
+/newlocation/mein_herz_brennt.txt 1891 bytes, replicated: replication=3, 1 block(s):  OK
+0. BP-692125161-172.18.0.5-1633249937125:blk_1073741827_1003 len=1891 Live_repl=3  [DatanodeInfoWithStorage[172.18.0.3:9866,DS-3c2e3cc2-8000-4a76-9c13-b959a9df5606,DISK], DatanodeInfoWithStorage[172.18.0.7:9866,DS-73d41511-dd49-4f72-accf-69e95eab4603,DISK], DatanodeInfoWithStorage[172.18.0.4:9866,DS-327f3b8e-6f14-4ffc-882a-b4f2b7541b3d,DISK]]
+
+
+Status: HEALTHY
+ Number of data-nodes:	3
+ Number of racks:		1
+ Total dirs:			0
+ Total symlinks:		0
+
+Replicated Blocks:
+ Total size:	1891 B
+ Total files:	1
+ Total blocks (validated):	1 (avg. block size 1891 B)
+ Minimally replicated blocks:	1 (100.0 %)
+ Over-replicated blocks:	0 (0.0 %)
+ Under-replicated blocks:	0 (0.0 %)
+ Mis-replicated blocks:		0 (0.0 %)
+ Default replication factor:	3
+ Average block replication:	3.0
+ Missing blocks:		0
+ Corrupt blocks:		0
+ Missing replicas:		0 (0.0 %)
+
+Erasure Coded Block Groups:
+ Total size:	0 B
+ Total files:	0
+ Total block groups (validated):	0
+ Minimally erasure-coded block groups:	0
+ Over-erasure-coded block groups:	0
+ Under-erasure-coded block groups:	0
+ Unsatisfactory placement block groups:	0
+ Average block group size:	0.0
+ Missing block groups:		0
+ Corrupt block groups:		0
+ Missing internal blocks:	0
+FSCK ended at Sun Oct 03 09:46:38 UTC 2021 in 3 milliseconds
+
+
+The filesystem under path '/newlocation/mein_herz_brennt.txt' is HEALTHY
+
+4. hdfs fsck -blockId blk_1073741827
+Connecting to namenode via http://namenode:9870/fsck?ugi=root&blockId=blk_1073741827+&path=%2F
+FSCK started by root (auth:SIMPLE) from /172.18.0.5 at Sun Oct 03 09:49:27 UTC 2021
+
+Block Id: blk_1073741827
+Block belongs to: /newlocation/mein_herz_brennt.txt
+No. of Expected Replica: 3
+No. of live Replica: 3
+No. of excess Replica: 0
+No. of stale Replica: 0
+No. of decommissioned Replica: 0
+No. of decommissioning Replica: 0
+No. of corrupted Replica: 0
+Block replica on datanode/rack: 67b2c2494e96/default-rack is HEALTHY
+Block replica on datanode/rack: 24630b480c3b/default-rack is HEALTHY
+Block replica on datanode/rack: 1c68f5078b0f/default-rack is HEALTHY
+
+
+
