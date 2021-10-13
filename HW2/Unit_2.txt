@@ -1,0 +1,120 @@
+*** 1 ***
+
+Сделать таблицу artists в Hive и вставить туда значения, используя датасет
+https://www.kaggle.com/pieca111/music-artists-popularity - 15 баллов
+
+использую /opt/hive/bin/beeline -u jdbc:hive2://localhost:10000
+
+CREATE TABLE `artists`(
+`mbid` string,
+`artist_mb` string,
+`artist_lastfm` string,
+`country_mb` string,
+`country_lastfm` string,
+`tags_mb` string,
+`tags_lastfm` string,
+`listeners_lastfm` bigint,
+`scrobbles_lastfm` bigint,
+`ambiguous_artist` boolean)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ',';
+
+LOAD DATA LOCAL INPATH '/opt/artists.csv' OVERWRITE INTO TABLE artists;
+
+*** 2 ***
+
+Используя Hive найти (команды и результаты записать в файл и добавить в
+репозиторий):
+
+a) Исполнителя с максимальным числом скробблов - 5 баллов
+
+select artist_lastfm, scrobbles_lastfm from artists
+order by scrobbles_lastfm desc
+limit 1
+
+---
+
+artist_lastfm	scrobbles_lastfm
+The Beatles	517126254
+
+b) Самый популярный тэг на ластфм - 10 баллов
+
+select tags, count(*) as cnt from artists
+lateral view explode(split(tags_lastfm, ';')) tags_lastfm as tags
+where tags != ''
+group by tags
+order by cnt desc
+limit 1
+
+---
+
+tags	cnt
+seen live	81278
+
+
+c) Самые популярные исполнители 10 самых популярных тегов ластфм - 10
+баллов
+
+with top_tags as (
+    select t, count(t) as cnt from artists
+    lateral view explode (split( tags_lastfm, ';')) tags_lastfm as t
+    where t != ''
+    group by t
+    order by cnt desc
+    limit 10
+)
+
+select artist.artist_lastfm, max(artist.scrobbles_lastfm) as scrobbles
+from (
+    select artist_lastfm, scrobbles_lastfm, tags from artists
+    lateral view explode (split( tags_lastfm, ';')) tags_lastfm as tags
+    ) artist
+join top_tags on top_tags.t = artist.tags
+group by artist.artist_lastfm
+order by scrobbles desc
+
+---
+
+artist.artist_lastfm	scrobbles
+The Beatles	517126254
+Radiohead	499548797
+Coldplay	360111850
+Muse	344838631
+Arctic Monkeys	332306552
+Pink Floyd	313236119
+Linkin Park	294986508
+Red Hot Chili Peppers	293784041
+Lady Gaga	285469647
+Metallica	281172228
+
+
+d) Любой другой инсайт на ваше усмотрение - 10 баллов
+
+Утверждается, что Финляндия испытывает сложности с поиском исполнителей для Евровидения т.к. все слушают и играют металл, поп-исполнители отсутствуют.
+Проверим это.
+
+select tags, sum(scrobbles_lastfm) as scrobbles from artists
+lateral view explode (split( tags_lastfm, ';')) tags_lastfm as tags
+where country_mb = 'Finland'
+group by tags
+order by scrobbles desc
+limit 12
+
+---
+
+Да, похоже что так.
+
+tags	scrobbles
+finnish	1474734066
+finland	1255496838
+seen live	1242948389
+metal	1044557177
+rock	987291638
+finnish metal	869357570
+heavy metal	753217697
+alternative	667211793
+melodic metal	635269939
+Suomi	602711046
+hard rock	562123623
+Progressive metal	502961299
+
