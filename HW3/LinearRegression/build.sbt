@@ -8,6 +8,12 @@ idePackagePrefix := Some("made")
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.10" % "test"
 
+libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.32"
+
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.6" % Runtime
+
+libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
+
 libraryDependencies  ++= Seq(
   // Last stable release
   "org.scalanlp" %% "breeze" % "1.2",
